@@ -8,21 +8,17 @@ on:
 
 permissions:
   contents: read
-  actions: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: pages
   cancel-in-progress: false
 
 jobs:
-  publicar:
+  build:
     runs-on: ubuntu-latest
 
-    environment:
-      name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
+    permissions:
+      contents: read
 
     steps:
       - name: Baixar código
@@ -67,32 +63,24 @@ jobs:
       - name: Enviar artefato
         uses: actions/upload-pages-artifact@v4
         with:
-          path: site
+          name: github-pages
+          path: site/
 
-      - name: Verificar disponibilidade do artefato
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          for i in {1..10}; do
-            echo "Verificando artefato - tentativa $i"
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
 
-            ARTIFACT=$(gh api \
-              repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/artifacts \
-              --jq '.artifacts[] | select(.name == "github-pages" and .expired == false) | .id' \
-              | head -n 1)
+    permissions:
+      actions: read
+      pages: write
+      id-token: write
 
-            if [ -n "$ARTIFACT" ]; then
-              echo "Artefato encontrado: $ARTIFACT"
-              exit 0
-            fi
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
 
-            sleep 3
-          done
-
-          echo "ERRO: artefato não encontrado pela API."
-          exit 1
-
+    steps:
       - name: Publicar no GitHub Pages
-        id: deploy
+        id: deployment
         uses: actions/deploy-pages@v4
 
