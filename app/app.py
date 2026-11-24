@@ -6,7 +6,7 @@ from flask import Flask, jsonify
 
 NOME_DUPLA = "dupla-11"
 MENSAGEM = "Ola, bem-vindo(a) a API da dupla 11!"
-PORTA = 5000
+PORTA = 5001
 
 # ==================================================
 VERSAO = os.environ.get("APP_VERSION", "v1")
